@@ -1,3 +1,5 @@
+A very simple SOC home lab that I tweaked around with to understanding studying logs!
+
 Features
 
     ELK Stack (Elasticsearch, Logstash, Kibana) for log management
