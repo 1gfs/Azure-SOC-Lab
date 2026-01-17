@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  elasticsearch:
+    image: elasticsearch:7.17.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - soc-network
+
+  kibana:
+    image: kibana:7.17.0
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    networks:
+      - soc-network
+
+  logstash:
+    image: logstash:7.17.0
+    container_name: logstash
+    volumes:
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+      - ./sample-logs:/usr/share/logstash/input-logs
+    ports:
+      - "5000:5000"
+      - "5001:5001"
+    depends_on:
+      - elasticsearch
+    networks:
+      - soc-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-proxy
+    ports:
+      - "8080:80"
+    volumes:
+      - ./dashboards:/usr/share/nginx/html
+    networks:
+      - soc-network
+
+volumes:
+  es_data:
+    driver: local
+
+networks:
+  soc-network:
+    driver: bridge
