@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home SOC Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { background: #2c3e50; color: white; padding: 20px; border-radius: 5px; }
+        .stats { display: flex; justify-content: space-between; margin: 20px 0; }
+        .stat-box { 
+            background: white; padding: 20px; border-radius: 5px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center;
+            flex: 1; margin: 0 10px;
+        }
+        .critical { border-left: 5px solid #e74c3c; }
+        .warning { border-left: 5px solid #f39c12; }
+        .info { border-left: 5px solid #3498db; }
+        .log-container { 
+            background: white; padding: 20px; border-radius: 5px; 
+            margin-top: 20px; max-height: 400px; overflow-y: auto;
+        }
+        .log-entry { 
+            padding: 10px; border-bottom: 1px solid #eee; 
+            font-family: monospace; font-size: 12px;
+        }
+        .critical-bg { background: #ffeaea; }
+        .warning-bg { background: #fff4e6; }
+        .info-bg { background: #e6f7ff; }
+        h3 { color: #2c3e50; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔒 Home Security Operations Center</h1>
+            <p>Real-time Security Monitoring Dashboard</p>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-box critical">
+                <h3>CRITICAL</h3>
+                <h2 id="critical-count">0</h2>
+                <p>Alerts</p>
+            </div>
+            <div class="stat-box warning">
+                <h3>WARNING</h3>
+                <h2 id="warning-count">0</h2>
+                <p>Alerts</p>
+            </div>
+            <div class="stat-box info">
+                <h3>TOTAL LOGS</h3>
+                <h2 id="total-logs">0</h2>
+                <p>Processed</p>
+            </div>
+        </div>
+        
+        <div class="log-container">
+            <h3>📊 Live Security Events</h3>
+            <div id="log-entries">
+                <!-- Logs will appear here -->
+                <div class="log-entry info-bg">
+                    [2024-01-15 10:30:00] INFO: Dashboard initialized. Waiting for logs...
+                </div>
+            </div>
+        </div>
+        
+        <div style="margin-top: 20px; text-align: center;">
+            <button onclick="addTestLog()">Add Test Log</button>
+            <button onclick="clearLogs()">Clear Logs</button>
+            <button onclick="window.open('http://localhost:5601')">Open Kibana</button>
+        </div>
+    </div>
+
+    <script>
+        let logs = [];
+        let logCount = { critical: 0, warning: 0, total: 0 };
+        
+        // Simulate receiving logs
+        function addLogEntry(level, message) {
+            const timestamp = new Date().toISOString().replace('T', ' ').substr(0, 19);
+            const logDiv = document.createElement('div');
+            
+            logDiv.className = `log-entry ${level.toLowerCase()}-bg`;
+            logDiv.innerHTML = `<strong>[${timestamp}] ${level}:</strong> ${message}`;
+            
+            document.getElementById('log-entries').prepend(logDiv);
+            logs.unshift({timestamp, level, message});
+            
+            // Update counters
+            if (level === 'CRITICAL') logCount.critical++;
+            if (level === 'WARNING') logCount.warning++;
+            logCount.total++;
+            
+            updateStats();
+            
+            // Keep only last 50 logs visible
+            if (logs.length > 50) {
+                const entries = document.getElementById('log-entries');
+                if (entries.children.length > 50) {
+                    entries.removeChild(entries.lastChild);
+                }
+            }
+        }
+        
+        function updateStats() {
+            document.getElementById('critical-count').textContent = logCount.critical;
+            document.getElementById('warning-count').textContent = logCount.warning;
+            document.getElementById('total-logs').textContent = logCount.total;
+        }
+        
+        // Test function
+        function addTestLog() {
+            const levels = ['INFO', 'WARNING', 'CRITICAL'];
+            const messages = [
+                'Failed login attempt from 192.168.1.105',
+                'Port scan detected on port 443',
+                'Database backup completed successfully',
+                'Suspicious PowerShell execution detected',
+                'Firewall rule triggered'
+            ];
+            
+            const level = levels[Math.floor(Math.random() * levels.length)];
+            const message = messages[Math.floor(Math.random() * messages.length)];
+            
+            addLogEntry(level, message);
+        }
+        
+        function clearLogs() {
+            document.getElementById('log-entries').innerHTML = '';
+            logs = [];
+            logCount = { critical: 0, warning: 0, total: 0 };
+            updateStats();
+            addLogEntry('INFO', 'Logs cleared manually');
+        }
+        
+        // Auto-add some logs on start
+        setTimeout(() => addTestLog(), 1000);
+        setTimeout(() => addTestLog(), 2000);
+        setTimeout(() => addTestLog(), 3000);
+        
+        // Simulate WebSocket connection (for real implementation)
+        console.log('Dashboard ready. Connect to WebSocket endpoint for real logs.');
+    </script>
+</body>
+</html>
